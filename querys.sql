@@ -90,8 +90,45 @@ ORDER BY dias_atraso DESC;
 
 select * from emprestimo;
 
--- Questão 51
 
+-- Questão 51
+CREATE OR REPLACE VIEW movimentos AS
+    SELECT EXTRACT(HOUR FROM hora_saida) AS hora
+    FROM emprestimo
+    WHERE hora_saida IS NOT NULL
+
+    UNION ALL
+
+    SELECT EXTRACT(HOUR FROM hora_devolucao) AS hora
+    FROM emprestimo
+    WHERE hora_devolucao IS NOT NULL
+
+    UNION ALL
+
+    SELECT EXTRACT(HOUR FROM hora_reserva) AS hora
+    FROM reserva
+    WHERE hora_reserva IS NOT NULL;
+
+CREATE OR REPLACE VIEW contagem AS
+	SELECT
+        hora,
+        COUNT(*) AS total_movimentos
+    FROM movimentos
+    GROUP BY hora;
+
+SELECT
+    hora,
+    total_movimentos,
+    CASE
+        WHEN total_movimentos = (SELECT MAX(total_movimentos) FROM contagem)
+            THEN 'MAIOR MOVIMENTO'
+        WHEN total_movimentos = (SELECT MIN(total_movimentos) FROM contagem)
+            THEN 'MENOR MOVIMENTO'
+    END AS classificacao
+FROM contagem
+WHERE total_movimentos = (SELECT MAX(total_movimentos) FROM contagem)
+   OR total_movimentos = (SELECT MIN(total_movimentos) FROM contagem)
+ORDER BY total_movimentos DESC;
 
 -- Questão 53
 -- View para relatório de atendimentos
